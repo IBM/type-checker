@@ -1,0 +1,49 @@
+{
+  "name": "IBM Type Checker",
+  "version": "0.0.4",
+  "applications": {
+    "gecko": {
+      "id": "IBM_Type_Checker@ibm.com"
+    }
+  },
+  "manifest_version": 2,
+  "description": "Check if all of your typography complies with IBM Type. Just press CTRL+T.",
+  "homepage_url": "https://ibm.com/design",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "IBM Type Checker",
+    "default_popup": "src/browser_action/browser_action.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "css": [
+        "src/inject/inject.css"
+      ]
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/inject/debounce.js",
+        "src/inject/inject.js"
+      ]
+    }
+  ],
+	"permissions": [
+		"tabs",
+		"storage",
+		"http://*/*",
+		"https://*/*"
+	]
+}
