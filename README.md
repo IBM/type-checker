@@ -10,7 +10,7 @@ Check if all of your typography complies with IBM Type. Just press CTRL+T.
 
 ---
 
-For more information on the grid this extensions is based on, check out [IBM Type](/Design/type).
+For more information on the grid this extensions is based on, check out [IBM Type](../../../type).
 
 ## How to Get It
 
@@ -24,7 +24,7 @@ The browser extension will not be listed publicly until the launch of the IBM Ty
 
 ### Firefox
 
-1. Right click and select `Save link as` on this [extension file link](/raw/master/ibm_type_checker-0.0.4-an+fx.xpi)
+1. Right click and select `Save link as` on this [extension file link](../raw/master/ibm_type_checker-0.0.4-an+fx.xpi)
 2. Copy and paste `about:addons` into your url bar or find the Add-ons link in the Firefox hamburger menu
 3. Click the cog icon on the page and select `Install Add-on From File`
 4. Select the file you just downloaded
