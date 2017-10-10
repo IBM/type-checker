@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "echo 'Tests coming soon'",
-    "dev": "web-ext run -v",
+    "dev": "web-ext run -s ./src",
     "commit": "git-cz"
   },
   "repository": {
