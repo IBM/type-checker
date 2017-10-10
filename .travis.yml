@@ -6,6 +6,6 @@ cache:
   - node_modules
 deploy:
   provider: script
-  script: npm run upload:chrome
+  script: webstore upload --auto-publish --source ./src --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN
   on:
-    all_branches: true
+    branch: master
