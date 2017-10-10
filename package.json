@@ -5,13 +5,15 @@
   "main": ".",
   "dependencies": {},
   "devDependencies": {
+    "chrome-webstore-upload-cli": "1.1.1",
     "commitizen": "2.9.6",
     "cz-conventional-changelog": "2.0.0",
     "web-ext": "2.0.0"
   },
   "scripts": {
     "dev": "web-ext run -v",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "upload:chrome": "webstore upload --source ./src --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN"
   },
   "repository": {
     "type": "git",
