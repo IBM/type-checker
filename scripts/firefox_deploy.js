@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const firefoxDeploy = require('firefox-extension-deploy');
 
-const manifest = require('./src/manifest.json');
+const manifest = require('../src/manifest.json');
 const { applications: { gecko: { id }}, version, name } = manifest;
 const extensionName = name.toLowerCase().split(' ').join('_');
 const { FIREFOX_ISSUER, FIREFOX_SECRET } = process.env;
