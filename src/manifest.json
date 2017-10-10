@@ -1,6 +1,6 @@
 {
   "name": "IBM Type Checker",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "applications": {
     "gecko": {
       "id": "IBM_Type_Checker@ibm.com"
@@ -17,16 +17,15 @@
   "browser_action": {
     "default_icon": "icons/icon19.png",
     "default_title": "IBM Type Checker",
-    "default_popup": "src/browser_action/browser_action.html"
+    "default_popup": "browser_action/browser_action.html"
   },
-  "content_scripts": [
-    {
+  "content_scripts": [{
       "matches": [
         "http://*/*",
         "https://*/*"
       ],
       "css": [
-        "src/inject/inject.css"
+        "inject/inject.css"
       ]
     },
     {
@@ -35,15 +34,15 @@
         "https://*/*"
       ],
       "js": [
-        "src/inject/debounce.js",
-        "src/inject/inject.js"
+        "inject/debounce.js",
+        "inject/inject.js"
       ]
     }
   ],
-	"permissions": [
-		"tabs",
-		"storage",
-		"http://*/*",
-		"https://*/*"
-	]
+  "permissions": [
+    "tabs",
+    "storage",
+    "http://*/*",
+    "https://*/*"
+  ]
 }

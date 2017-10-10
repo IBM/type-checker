@@ -1,0 +1,33 @@
+{
+  "name": "type-checker",
+  "version": "0.0.6",
+  "description": "Check if all of your typography complies with IBM Type. Just press CTRL+T.",
+  "dependencies": {},
+  "devDependencies": {
+    "commitizen": "2.9.6",
+    "cz-conventional-changelog": "2.0.0",
+    "web-ext": "2.0.0"
+  },
+  "scripts": {
+    "test": "echo 'Tests coming soon'",
+    "dev": "web-ext run -v",
+    "commit": "git-cz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IBM/type-checker.git"
+  },
+  "keywords": [
+    "IBM",
+    "type",
+    "typography",
+    "web",
+    "extension"
+  ],
+  "author": "Diego Hernandez <diego.hernandez@ibm.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/IBM/type-checker/issues"
+  },
+  "homepage": "https://github.com/IBM/type-checker#readme"
+}
