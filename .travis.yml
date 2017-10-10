@@ -1,11 +1,14 @@
 language: node_js
 before_install:
-  - npm i -g chrome-webstore-upload-cli
+  - npm i -g chrome-webstore-upload-cli web-ext
+
 cache:
   directories: 
   - node_modules
 deploy:
   provider: script
-  script: webstore upload --auto-publish --source ./src --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN
+  script: 
+  - webstore upload --auto-publish --source ./src --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN
+  - web-ext build -o -s ./src -a ./dist; node ./scripts/firefox_deploy.js
   on:
-    branch: master
+    all_branches: true
