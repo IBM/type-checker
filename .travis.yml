@@ -1,4 +1,6 @@
 language: node_js
+before_install:
+  - npm i -g chrome-webstore-upload-cli
 cache:
   directories: 
   - node_modules
