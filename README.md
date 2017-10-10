@@ -1,4 +1,4 @@
-# IBM Type Checker
+# IBM Type Checker [![Build Status](https://travis-ci.org/IBM/type-checker.svg?branch=master)](https://travis-ci.org/IBM/type-checker)
 
 Check if all of your typography complies with IBM Type. Just press CTRL+T.
 
