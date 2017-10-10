@@ -11,6 +11,7 @@
     "web-ext": "2.0.0"
   },
   "scripts": {
+    "test": "echo 'Tests coming soon'",
     "dev": "web-ext run -v",
     "commit": "git-cz",
     "upload:chrome": "webstore upload --source ./src --extension-id $EXTENSION_ID --client-id $CLIENT_ID --client-secret $CLIENT_SECRET --refresh-token $REFRESH_TOKEN"
