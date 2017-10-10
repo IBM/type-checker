@@ -19,8 +19,7 @@
     "default_title": "IBM Type Checker",
     "default_popup": "browser_action/browser_action.html"
   },
-  "content_scripts": [
-    {
+  "content_scripts": [{
       "matches": [
         "http://*/*",
         "https://*/*"
@@ -40,10 +39,10 @@
       ]
     }
   ],
-	"permissions": [
-		"tabs",
-		"storage",
-		"http://*/*",
-		"https://*/*"
-	]
+  "permissions": [
+    "tabs",
+    "storage",
+    "http://*/*",
+    "https://*/*"
+  ]
 }

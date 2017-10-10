@@ -1,11 +1,10 @@
 {
   "name": "type-checker",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "Check if all of your typography complies with IBM Type. Just press CTRL+T.",
   "main": ".",
   "dependencies": {},
   "devDependencies": {
-    "chrome-webstore-upload-cli": "1.1.1",
     "commitizen": "2.9.6",
     "cz-conventional-changelog": "2.0.0",
     "web-ext": "2.0.0"

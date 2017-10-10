@@ -20,7 +20,7 @@ The browser extension will not be listed publicly until the launch of the IBM Ty
 
 1. Navigate to the [unlisted store posting](https://chrome.google.com/webstore/detail/cndnlgmhedlhnhofjohafhacnnkghmpb).
 2. Click `Add to Chrome`
-3. Navigate to a new webpage and press <kbd>ctrl + t</kbd>. You must refresh the page if it was open before you installed the extension.
+3. Navigate to a new webpage and press <kbd>ctrl</kbd> + <kbd>T</kbd>. You must refresh the page if it was open before you installed the extension.
 
 ### Firefox
 
@@ -28,4 +28,4 @@ The browser extension will not be listed publicly until the launch of the IBM Ty
 2. Copy and paste `about:addons` into your url bar or find the Add-ons link in the Firefox hamburger menu
 3. Click the cog icon on the page and select `Install Add-on From File`
 4. Select the file you just downloaded
-5. Navigate to a new webpage and press <kbd>ctrl + t</kbd>. You must refresh the page if it was open before you installed the extension.
+5. Navigate to a new webpage and press <kbd>ctrl</kbd> + <kbd>T</kbd>. You must refresh the page if it was open before you installed the extension.
