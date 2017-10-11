@@ -16,6 +16,13 @@
   );
 
   /**
+   * Set of added IBM IDs.
+   * 
+   * @type {String[]}
+   */
+  let GENERATED_IDS = [];
+
+  /**
    * The types of alerts.
    * 
    * @enum {String}
@@ -186,16 +193,16 @@
     },
   ];
     
-    /**
-     * State for whether the type size errors are displayed.
-     * 
-     * @type {Boolean}
-     */
-    let APP_IS_ACTIVE = false;
+  /**
+   * State for whether the type size errors are displayed.
+   * 
+   * @type {Boolean}
+   */
+  let APP_IS_ACTIVE = false;
 
-    /* ==============
-    FUNCTIONS
-    ============== */
+  /* ==============
+  FUNCTIONS
+  ============== */
     
   const debounceRefresh = debounce(refreshApp, 100);
     
@@ -209,6 +216,9 @@
     // Listen to window resizing to re-calculate the fluid type scales since they are dependent on 
     // the window size.
     window.addEventListener('resize', debounceRefresh);
+
+    window.addEventListener('keyup', evt => {
+    });
 
     console.log('IBM Type Checker is now active');
     APP_IS_ACTIVE = true;
@@ -277,11 +287,29 @@
    * UI.
    */
   function createUI (root, alerts) {
-    let x = y = offsetX = offsetY = windowWidth = windowHeight = uiWidth = uiHeight = 0;
+    let x = 0, 
+    y = 0,
+    offsetX = 0,
+    offsetY = 0,
+    windowWidth = 0,
+    windowHeight = 0,
+    uiWidth = 0,
+    uiHeight = 0;
+
+    const closeButton = Elementary.createElement('button', {
+      className:  `${CLASS_PREFIX}__close`,
+    }, 'Close IBM Type Checker');
+    closeButton.innerHTML += `
+    <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S2 20.6 2 14 7.4 2 14 2zm0-2C6.3 0 0 6.3 0 
+        14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
+        4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3"/>
+    </svg>`
+    closeButton.addEventListener('click', deactivateApp);
 
     const header = Elementary.createElement('header', {
       className: `${CLASS_PREFIX}__drag-area`,
-    }, 'IBM Type Checker');
+    }, 'IBM Type Checker', closeButton);
 
     const report = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__report`,
@@ -381,7 +409,9 @@
    * @returns {String} The generated ID.
    */
   function generateId () {
-    return `${CLASS_PREFIX}-${Math.round(Date.now() * Math.random())}`;
+    const id = `${CLASS_PREFIX}-${Math.round(Date.now() * Math.random())}`;
+    GENERATED_IDS.push(id);
+    return id;
   }
 
   /**
@@ -405,11 +435,30 @@
   }
 
   /**
-   * Removes the styles of type scale errors revealed.
+   * Removes the UI, generated IDs, and styles of type scale errors revealed.
    * 
    * @param {HTMLElement} root The HTML element to remove type size related alerts within.
    */
   function removeTypeSizeAlerts (root) {
+    // Remove the UI.
+    const uis = Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
+      .forEach(ui => {
+        ui.addEventListener('transitionend', () => {
+          try {
+            ui.parentNode.removeChild(ui);
+          } catch(e) {}
+        });
+
+        ui.classList.add(`${CLASS_PREFIX}__ui--hidden`);
+      });
+
+    // Remove any generated IDs that have been added to the page.
+    GENERATED_IDS.forEach(id => {
+      const element = root.querySelector(`#${id}`);
+      if (element) element.removeAttribute('id');
+    });
+    GENERATED_IDS = [];
+
     Array.from(root.querySelectorAll(`.${ERROR_CLASS_NAME}`))
       .forEach(el => {
         el.classList.remove(ERROR_CLASS_NAME);
@@ -562,12 +611,19 @@
    * Initialize app.
    */
   function init () {
-    window.addEventListener('keydown', evt => {
+    window.addEventListener('keyup', evt => {
       const { ctrlKey, keyCode } = evt;
+
+      // Check if the user pressed ctrl and T.
       if (ctrlKey && (keyCode === 84)) {
         // Style this element in a way to warn the user that this text node is not compliant if the
         // application has just been activated. Otherwise remove existing clear error styles.
         (APP_IS_ACTIVE === false) ? activateApp() : deactivateApp();
+      }
+
+      // Check if user pressed ESC.
+      if ((APP_IS_ACTIVE === true) && (evt.keyCode ===  27)) {
+        deactivateApp();
       }
     });
   }

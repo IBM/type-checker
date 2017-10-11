@@ -1,11 +1,10 @@
 {
   "name": "type-checker",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Check if all of your typography complies with IBM Type. Just press CTRL+T.",
   "dependencies": {},
   "devDependencies": {
     "commitizen": "2.9.6",
-    "cz-conventional-changelog": "2.0.0",
     "firefox-extension-deploy": "1.1.0",
     "web-ext": "2.0.0"
   },
