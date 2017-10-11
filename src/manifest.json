@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "applications": {
     "gecko": {
-      "id": "IBM_Type_Checker@ibm.com"
+      "id": "IBM_Type_Checker2@ibm.com"
     }
   },
   "manifest_version": 2,
