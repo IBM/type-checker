@@ -1,6 +1,6 @@
 {
   "name": "type-checker",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Check if all of your typography complies with IBM Type. Just press CTRL+T.",
   "dependencies": {},
   "devDependencies": {
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "echo 'Tests coming soon'",
-    "dev": "web-ext run -v",
+    "dev": "web-ext run -s ./src -u https://ibm.github.io/type/ --bc",
     "commit": "git-cz"
   },
   "repository": {
