@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "echo 'Tests coming soon'",
-    "dev": "web-ext run -s ./src",
+    "dev": "web-ext run -s ./src -u https://ibm.github.io/type/ --bc",
     "commit": "git-cz"
   },
   "repository": {

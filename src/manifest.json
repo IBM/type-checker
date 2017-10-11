@@ -35,6 +35,7 @@
       ],
       "js": [
         "inject/debounce.js",
+        "inject/Elementary.js",
         "inject/inject.js"
       ]
     }
