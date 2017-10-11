@@ -38,7 +38,7 @@
    * @type {String}
    * @const
    */
-  const ERROR_CLASS_NAME = `${CLASS_PREFIX}-error`;
+  const ERROR_CLASS_NAME = `${CLASS_PREFIX}__error`;
   
   /**
    * The class name used to apply warning styles.
@@ -46,7 +46,7 @@
    * @type {String}
    * @const
    */
-  const WARNING_CLASS_NAME = `${CLASS_PREFIX}-warning`;
+  const WARNING_CLASS_NAME = `${CLASS_PREFIX}__warning`;
   
   /**
    * Set of established breakpoints for minimum window widths in pixels.
@@ -298,6 +298,7 @@
 
     const closeButton = Elementary.createElement('button', {
       className:  `${CLASS_PREFIX}__close`,
+      onclick: deactivateApp,
     }, 'Close IBM Type Checker');
     closeButton.innerHTML += `
     <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
@@ -305,7 +306,6 @@
         14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
         4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3"/>
     </svg>`
-    closeButton.addEventListener('click', deactivateApp);
 
     const header = Elementary.createElement('header', {
       className: `${CLASS_PREFIX}__drag-area`,
@@ -387,6 +387,20 @@
         className: `${CLASS_PREFIX}__item`,
       }, Elementary.createElement('a', {
         className: `${CLASS_PREFIX}__link ${CLASS_PREFIX}__link--${alertType}`,
+        onmouseover: () => element.classList.add(`${CLASS_PREFIX}__${alertType}`),
+        onmouseleave: () => element.classList.remove(`${CLASS_PREFIX}__${alertType}`),
+        // onclick: evt => {
+        //   evt.preventDefault();
+        //   /********************************** CONTINUE WORK HERE */
+        //   const { offsetTop } = element;
+        //   const { innerHeight } = window;
+        //   const middle = Math.round(innerHeight / 2);
+        //   // const position = Math.round(offsetTop - middle);
+        //   const position = offsetTop;
+        //   console.log(offsetTop)
+        //   document.body.scrollTop = position;
+        //   document.documentElement.scrollTop = position;
+        // },
         href: `#${id}`,
       }, elementText, elementMeta));
     }
