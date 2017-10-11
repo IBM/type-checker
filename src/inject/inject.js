@@ -1,5 +1,12 @@
 (function (window) {
   /**
+   * The class prefix for all CSS classes in the UI.
+   * 
+   * @type {String}
+   */
+  const CLASS_PREFIX = 'ibm-type-checker';
+
+  /**
    * The base font size of the document.
    * 
    * @type {Number}
@@ -7,14 +14,24 @@
   const BASE_FONT_SIZE = (
     parseFloat(window.getComputedStyle(document.documentElement).fontSize, 10) || 16
   );
-  
+
+  /**
+   * The types of alerts.
+   * 
+   * @enum {String}
+   */
+  const ALERT_TYPE = {
+    error: 'error',
+    warning: 'warning',
+  };
+
   /**
    * The class name used to apply error styles.
    * 
    * @type {String}
    * @const
    */
-  const ERROR_CLASS_NAME = 'ibm-type-scale-checker-error';
+  const ERROR_CLASS_NAME = `${CLASS_PREFIX}-error`;
   
   /**
    * The class name used to apply warning styles.
@@ -22,7 +39,7 @@
    * @type {String}
    * @const
    */
-  const WARNING_CLASS_NAME = 'ibm-type-scale-checker-warning';
+  const WARNING_CLASS_NAME = `${CLASS_PREFIX}-warning`;
   
   /**
    * Set of established breakpoints for minimum window widths in pixels.
@@ -180,14 +197,14 @@
     FUNCTIONS
     ============== */
     
-    const debounceRefresh = debounce(refreshApp, 100);
+  const debounceRefresh = debounce(refreshApp, 100);
     
-    /**
-     * Activates the type checker by checking the font sizes of all of the text on the document body
-     * and displaying any type size related alerts.
-     */
-    function activateApp () {
-      showTypeSizeAlerts(document.body);
+  /**
+   * Activates the type checker by checking the font sizes of all of the text on the document body
+   * and displaying any type size related alerts.
+   */
+  function activateApp () {
+    showTypeSizeAlerts(document.body);
       
     // Listen to window resizing to re-calculate the fluid type scales since they are dependent on 
     // the window size.
@@ -248,9 +265,143 @@
    * @param {HTMLElement} root The HTML element to find type size related alerts within.
    */
   function showTypeSizeAlerts (root) {
-    const { warning, error } = findSizingAlerts(root);
-    warning.forEach(styleAsWarning);
-    error.forEach(styleAsError);
+    const alerts = findSizingAlerts(root);
+    createUI(root, alerts);
+  }
+
+  /**
+   * Create the UI elements and appends it to the given root.
+   * 
+   * @param {Element} root The HTML element to create the UI in.
+   * @param {{ warning: Element[], error: Element[] }} alerts Object of alerts to highlight in
+   * UI.
+   */
+  function createUI (root, alerts) {
+    let x = y = offsetX = offsetY = windowWidth = windowHeight = uiWidth = uiHeight = 0;
+
+    const header = Elementary.createElement('header', {
+      className: `${CLASS_PREFIX}__drag-area`,
+    }, 'IBM Type Checker');
+
+    const report = Elementary.createElement('div', {
+      className: `${CLASS_PREFIX}__report`,
+    }, 
+      createReportList(alerts.error, ALERT_TYPE.error), 
+      createReportList(alerts.warning, ALERT_TYPE.warning)
+    );
+
+    const ui = Elementary.createElement('div', {
+      className: `${CLASS_PREFIX}__ui`,
+    }, header, report);
+    
+    const container = Elementary.createElement('div', {
+      className: CLASS_PREFIX,
+    }, ui);
+    
+    // Event handlers
+    const startDrag = ({ pageX, pageY }) => {
+      const { top, left, width, height } = ui.getBoundingClientRect()
+      const { innerWidth, innerHeight } = window;
+      offsetX = pageX - left;
+      offsetY = pageY - top;
+      uiWidth = width;
+      uiHeight = height;
+      windowWidth = innerWidth;
+      windowHeight = innerHeight;
+      
+      container.addEventListener('mousemove', drag);
+      container.addEventListener('mouseup', endDrag);
+    };
+    
+    const drag = ({ pageX, pageY }) => {
+      ui.style.left = `${Math.max(0, Math.min((pageX - offsetX), (windowWidth - uiWidth)))}px`;
+      ui.style.top = `${Math.max(0, Math.min((pageY - offsetY), (windowHeight - uiHeight)))}px`;
+    };
+    
+    const endDrag = evt => { 
+      container.removeEventListener('mousemove', drag);
+      container.removeEventListener('mouseup', endDrag);
+    };
+    
+    // Add initial event listener.
+    header.addEventListener('mousedown', startDrag);
+
+    // Append all of the extension UI to the root.
+    root.appendChild(container);
+  }
+
+  /**
+   * Creates a report list for a given type of element alerts.
+   * 
+   * @param {Elements[]} elements The elements to make a violation alert from. 
+   * @param {ALERT_TYPE} alertType The type of alerts this report is going to have.
+   * @returns {Element} The container element that has all of the element alerts listed out.
+   */
+  function createReportList(elements, alertType) {
+    const title = Elementary.createElement('h2', {
+      className: `${CLASS_PREFIX}__section-title`,
+    }, `${alertType}s: ${elements.length}`);
+
+    const alerts = elements.map(element => {
+      const elementText = Elementary.createElement('span', { 
+        className: `${CLASS_PREFIX}__alert-text` 
+      }, element.textContent);
+      
+      const metaContent = getElementMeta(element);
+      const elementMeta = Elementary.createElement('div', { 
+        className: `${CLASS_PREFIX}__alert-meta`,
+      }, metaContent);
+
+      const id = element.id || generateId();
+      element.id = id;
+      
+      return Elementary.createElement('li', {
+        className: `${CLASS_PREFIX}__item`,
+      }, Elementary.createElement('a', {
+        className: `${CLASS_PREFIX}__link ${CLASS_PREFIX}__link--${alertType}`,
+        href: `#${id}`,
+      }, elementText, elementMeta));
+    }
+    );
+
+    const list = Elementary.createElement('ul', {
+      className: `${CLASS_PREFIX}__list`,
+    }, ...alerts);
+
+    const container = Elementary.createElement('section', { 
+      className: `${CLASS_PREFIX}__section`,
+    }, title, list)
+
+    return container;
+  }
+
+  /**
+   * Generates an ID string to add to any HTML element.
+   * 
+   * @returns {String} The generated ID.
+   */
+  function generateId () {
+    return `${CLASS_PREFIX}-${Math.round(Date.now() * Math.random())}`;
+  }
+
+  /**
+   * Creates a string of Emmet style meta data of an element.
+   * 
+   * @param {Element} element The element to get meta data from.
+   * @returns {String} The meta data of the element.
+   */
+  function getElementMeta (element) {
+    let meta = '';
+    
+    if (element.className && element.className.length > 0) {
+      meta += `.${element.className.split(' ').join('.')}`;
+    }
+    
+    if (element.id && element.id.length > 0) {
+      meta +=`#${element.id}`;
+    }
+
+    return meta;
   }
 
   /**
@@ -328,8 +479,8 @@
 
     return Array.from(root.querySelectorAll('*'))
 
-      // Flatten lists of child nodes into a flat array. All children in this array should be distinct
-      // HTML elements. This makes it easier to make calculations with all of the children.
+      // Flatten lists of child nodes into a flat array. All children in this array should be 
+      // distinct HTML elements. This makes it easier to make calculations with all of the children.
       .reduce((allChildren, el) => allChildren.concat(Array.from(el.childNodes)), [])
 
       // Filter down to get the text nodes in the document that contain non-whitespace text.
@@ -348,7 +499,11 @@
 
         // Make sure that the current element is visible to the user.
         const isVisible = (
-          (style.display !== 'none') && (style.visibility !== 'hidden') && (style.opacity > 0)
+          (style.display !== 'none') 
+          && (style.visibility !== 'hidden') 
+          && (style.opacity > 0) 
+          && (parseInt(style.width, 10) > 0)
+          && (parseInt(style.height, 10) > 0)
         );
 
         // Check if there is a fluid type scale match for the current window size.
