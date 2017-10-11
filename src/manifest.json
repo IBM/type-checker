@@ -1,6 +1,6 @@
 {
   "name": "IBM Type Checker",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "applications": {
     "gecko": {
       "id": "IBM_Type_Checker@ibm.com"
