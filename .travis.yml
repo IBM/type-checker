@@ -3,6 +3,7 @@ before_install:
   - npm i -g chrome-webstore-upload-cli web-ext
 
 cache:
+  yarn: true
   directories: 
   - node_modules
 deploy:
