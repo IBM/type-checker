@@ -1,9 +1,9 @@
 language: node_js
-# before_install:
-#   - npm i -g chrome-webstore-upload-cli web-ext
+before_install:
+  - npm i -g chrome-webstore-upload-cli web-ext
 
-# deploy:
-#   provider: script
-#   script: scripts/deploy.sh
-#   on:
-#     all_branches: true
+deploy:
+  provider: script
+  script: scripts/deploy.sh
+  on:
+    branch: master
