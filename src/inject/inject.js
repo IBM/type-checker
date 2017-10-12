@@ -4,7 +4,7 @@
    * 
    * @type {String}
    */
-  const CLASS_PREFIX = 'ibm-type-checker';
+  const CLASS_PREFIX = 'ibm_type-checker';
 
   /**
    * The base font size of the document.
@@ -192,13 +192,28 @@
       MAX: BASE_EMS_SCALE[24],
     },
   ];
+
+  /**
+   * Close icon SVG.
+   * 
+   * @type {Element}
+   */
+  const CLOSE_ICON = Elementary.createSVGElement('svg', {
+    viewBox: '0 0 28 28',
+  }, Elementary.createSVGElement('path', {
+    d: `M14 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S2 20.6 2 14 7.4 2 14 2zm0-2C6.3 0 0 6.3 0 
+    14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
+    4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3`,
+  }));
     
   /**
    * State for whether the type size errors are displayed.
    * 
    * @type {Boolean}
    */
-  let APP_IS_ACTIVE = false;
+  let appIsActive = false;
+
+  let scrollAnimation;
 
   /* ==============
   FUNCTIONS
@@ -221,7 +236,7 @@
     });
 
     console.log('IBM Type Checker is now active');
-    APP_IS_ACTIVE = true;
+    appIsActive = true;
   }
 
   /**
@@ -234,7 +249,7 @@
     window.removeEventListener('resize', debounceRefresh);
 
     console.log('IBM Type Checker is now inactive');
-    APP_IS_ACTIVE = false;
+    appIsActive = false;
   }
 
   /**
@@ -277,6 +292,8 @@
   function showTypeSizeAlerts (root) {
     const alerts = findSizingAlerts(root);
     createUI(root, alerts);
+    alerts.error.forEach(styleAsError);
+    alerts.warning.forEach(styleAsWarning);
   }
 
   /**
@@ -299,13 +316,7 @@
     const closeButton = Elementary.createElement('button', {
       className:  `${CLASS_PREFIX}__close`,
       onclick: deactivateApp,
-    }, 'Close IBM Type Checker');
-    closeButton.innerHTML += `
-    <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S2 20.6 2 14 7.4 2 14 2zm0-2C6.3 0 0 6.3 0 
-        14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
-        4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3"/>
-    </svg>`
+    }, 'Close IBM Type Checker', CLOSE_ICON);
 
     const header = Elementary.createElement('header', {
       className: `${CLASS_PREFIX}__drag-area`,
@@ -314,8 +325,8 @@
     const report = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__report`,
     }, 
-      createReportList(alerts.error, ALERT_TYPE.error), 
-      createReportList(alerts.warning, ALERT_TYPE.warning)
+      createReportList(alerts.error, ALERT_TYPE.error, root), 
+      createReportList(alerts.warning, ALERT_TYPE.warning, root)
     );
 
     const ui = Elementary.createElement('div', {
@@ -363,9 +374,10 @@
    * 
    * @param {Elements[]} elements The elements to make a violation alert from. 
    * @param {ALERT_TYPE} alertType The type of alerts this report is going to have.
+   * @param {Element} root The HTML element to create the report in.
    * @returns {Element} The container element that has all of the element alerts listed out.
    */
-  function createReportList(elements, alertType) {
+  function createReportList(elements, alertType, root) {
     const title = Elementary.createElement('h2', {
       className: `${CLASS_PREFIX}__section-title`,
     }, `${alertType}s: ${elements.length}`);
@@ -387,20 +399,25 @@
         className: `${CLASS_PREFIX}__item`,
       }, Elementary.createElement('a', {
         className: `${CLASS_PREFIX}__link ${CLASS_PREFIX}__link--${alertType}`,
-        onmouseover: () => element.classList.add(`${CLASS_PREFIX}__${alertType}`),
-        onmouseleave: () => element.classList.remove(`${CLASS_PREFIX}__${alertType}`),
-        // onclick: evt => {
-        //   evt.preventDefault();
-        //   /********************************** CONTINUE WORK HERE */
-        //   const { offsetTop } = element;
-        //   const { innerHeight } = window;
-        //   const middle = Math.round(innerHeight / 2);
-        //   // const position = Math.round(offsetTop - middle);
-        //   const position = offsetTop;
-        //   console.log(offsetTop)
-        //   document.body.scrollTop = position;
-        //   document.documentElement.scrollTop = position;
-        // },
+        onmouseover: () => {
+          root.classList.add(`${CLASS_PREFIX}--focus`);
+          element.classList.add(`${CLASS_PREFIX}__${alertType}--active`);
+        },
+        onmouseleave: () => {
+          root.classList.remove(`${CLASS_PREFIX}--focus`);
+          element.classList.remove(`${CLASS_PREFIX}__${alertType}--active`);
+        },
+        onclick: evt => {
+          evt.preventDefault();
+
+          const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+          const { top } = element.getBoundingClientRect();
+          const { innerHeight } = window;
+          const middle = Math.round(innerHeight / 2);
+          const targetPosition = Math.round((top + scrollTop) - middle);
+
+          scrollTo(targetPosition);
+        },
         href: `#${id}`,
       }, elementText, elementMeta));
     }
@@ -449,6 +466,39 @@
   }
 
   /**
+   * Scrolls the page to the given target position.
+   * 
+   * @param {number} targetPosition The position to scroll to.
+   */
+  function scrollTo (targetPosition) {
+    if (scrollAnimation) {
+      window.cancelAnimationFrame(scrollAnimation);
+    }
+
+    const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+    let currentScrollPosition = scrollTop;
+    let distanceToScroll = targetPosition - currentScrollPosition;
+    let easing;
+
+    function step () {
+      easing = 0.1 * distanceToScroll;
+      currentScrollPosition += easing;
+      distanceToScroll = targetPosition - currentScrollPosition;
+
+      document.body.scrollTop = currentScrollPosition;
+      document.documentElement.scrollTop = currentScrollPosition;
+        
+      if (Math.abs(currentScrollPosition - targetPosition) > 3) {
+        scrollAnimation = window.requestAnimationFrame(step);
+      }
+    }
+
+    if (distanceToScroll !== 0) {
+      scrollAnimation = window.requestAnimationFrame(step);
+    }
+  }
+
+  /**
    * Removes the UI, generated IDs, and styles of type scale errors revealed.
    * 
    * @param {HTMLElement} root The HTML element to remove type size related alerts within.
@@ -484,6 +534,8 @@
         el.classList.remove(WARNING_CLASS_NAME);
         el.title = '';
       });
+
+    root.classList.remove(`${CLASS_PREFIX}--focus`);
   }
 
   /**
@@ -565,8 +617,12 @@
           (style.display !== 'none') 
           && (style.visibility !== 'hidden') 
           && (style.opacity > 0) 
-          && (parseInt(style.width, 10) > 0)
-          && (parseInt(style.height, 10) > 0)
+          && (
+            (parseInt(style.width, 10) > BASE_FONT_SIZE)
+            && (parseInt(style.height, 10) > BASE_FONT_SIZE)
+            && (style.overflow !== 'hidden')
+          )
+          && (typeof style.clip === 'string')
         );
 
         // Check if there is a fluid type scale match for the current window size.
@@ -625,18 +681,18 @@
    * Initialize app.
    */
   function init () {
-    window.addEventListener('keyup', evt => {
+    window.addEventListener('keydown', evt => {
       const { ctrlKey, keyCode } = evt;
 
       // Check if the user pressed ctrl and T.
       if (ctrlKey && (keyCode === 84)) {
         // Style this element in a way to warn the user that this text node is not compliant if the
         // application has just been activated. Otherwise remove existing clear error styles.
-        (APP_IS_ACTIVE === false) ? activateApp() : deactivateApp();
+        (appIsActive === false) ? activateApp() : deactivateApp();
       }
 
       // Check if user pressed ESC.
-      if ((APP_IS_ACTIVE === true) && (evt.keyCode ===  27)) {
+      if ((appIsActive === true) && (evt.keyCode ===  27)) {
         deactivateApp();
       }
     });

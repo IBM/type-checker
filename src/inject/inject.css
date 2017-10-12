@@ -1,10 +1,10 @@
-.ibm-type-checker {
+.ibm_type-checker {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 999999;
+  z-index: 2140000000;
 
   width: 100%;
   min-width: 100%;
@@ -14,16 +14,17 @@
   min-height: 100%;
   max-height: 100%;
 
+  font-family: sans-serif;
   font-size: 16px;
 
   background-color: transparent;
 }
 
-.ibm-type-checker svg {
+.ibm_type-checker svg {
   fill: currentColor;
 }
 
-.ibm-type-checker button {
+.ibm_type-checker button {
   font-size: inherit;
   font-family: inherit;
   font-weight: inherit;
@@ -37,7 +38,7 @@
 }
 
 
-.ibm-type-checker__ui {
+.ibm_type-checker__ui {
   position: absolute;
   top: 1em;
   right: 1em;
@@ -61,30 +62,32 @@
   }
 }
 
-.ibm-type-checker__ui--hidden {
+.ibm_type-checker__ui--hidden {
   transform: translate(0, calc(-100% - 2em));
   opacity: 0;
   transition: opacity 100ms ease-out, transform 250ms ease-out;
 }
 
-.ibm-type-checker__ui::selection {
+.ibm_type-checker__ui::selection {
   background-color: transparent;
 }
 
-.ibm-type-checker__drag-area {
+.ibm_type-checker__drag-area {
   position: relative;
   padding: 0.4em;
 
   background-color: #272727;
   color: white;
   cursor: grab;
+  cursor: -webkit-grab;
 }
 
-.ibm-type-checker__drag-area:active {
+.ibm_type-checker__drag-area:active {
   cursor: grabbing;
+  cursor: -webkit-grabbing;
 }
 
-.ibm-type-checker__close {
+.ibm_type-checker__close {
   position: absolute;  
   padding: 0.2em;
   top: 0.4em;
@@ -96,11 +99,11 @@
   text-indent: -999999rem;
 }
 
-.ibm-type-checker__close:hover {
+.ibm_type-checker__close:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-.ibm-type-checker__close svg {
+.ibm_type-checker__close svg {
   position: absolute;
   top: 0;
   left: 0;
@@ -108,29 +111,29 @@
   height: 100%;
 }
 
-.ibm-type-checker__report {
+.ibm_type-checker__report {
   padding: 0.2em;
   max-height: 25em;
   overflow-y: auto;
 }
 
-.ibm-type-checker__section-title {
+.ibm_type-checker__section-title {
   font-size: 1.2em;
   text-transform: capitalize;
   margin: 0.2em 0;;
 }
 
-.ibm-type-checker__list {
+.ibm_type-checker__list {
   padding: 0;
   list-style: none;
   margin-bottom: 2em;
 }
 
-.ibm-type-checker__item {
+.ibm_type-checker__item {
   border-top: 1px solid #eaeaea;
 }
 
-.ibm-type-checker__link {
+.ibm_type-checker__link {
   display: block;
   padding: 0.6em 0.4em;
 
@@ -139,14 +142,14 @@
   color: inherit;
 }
 
-.ibm-type-checker__link:hover,
-.ibm-type-checker__link:focus {
+.ibm_type-checker__link:hover,
+.ibm_type-checker__link:focus {
   text-decoration: none;
   color: inherit;
   background-color: #eaeaea;
 }
 
-.ibm-type-checker__alert-text {
+.ibm_type-checker__alert-text {
   font-weight: 700;
   display: block;
   overflow: hidden;
@@ -155,7 +158,7 @@
   margin-bottom: 0.3em;
 }
 
-.ibm-type-checker__alert-meta {
+.ibm_type-checker__alert-meta {
   background-color: rgba(31, 132, 255, 0.08);
   color: #69a6ff;
   font-family: 'IBM Plex Mono', monospace;
@@ -164,10 +167,30 @@
   padding: 0.2em 0.4em;
 }
 
-.ibm-type-checker__error {
+.ibm_type-checker__error {
+  box-shadow: inset 0 0 0 9999rem rgba(255, 0, 0, 0.25), inset 0 0 0 1px #F00;
+}
+
+.ibm_type-checker--focus .ibm_type-checker__error {
+  box-shadow: none;
+}
+
+.ibm_type-checker__error--active {
+  position: relative;
+  z-index: 2139999999;
   box-shadow: inset 0 0 0 9999rem rgba(255, 0, 0, 0.25), inset 0 0 0 1px #F00 !important;
 }
 
-.ibm-type-checker__warning {
-  box-shadow: inset 0 0 0 9999rem rgba(255, 255, 0, 0.25), inset 0 0 0 1px #FF0 !important;
+.ibm_type-checker__warning {
+  box-shadow: inset 0 0 0 9999rem rgba(255, 255, 0, 0.25), inset 0 0 0 1px #FF0;
+}
+
+.ibm_type-checker--focus .ibm_type-checker__warning {
+  box-shadow: none;
+}
+
+.ibm_type-checker__warning--active {
+  position: relative;
+  z-index: 2139999999;
+  box-shadow: inset 0 0 0 9999rem rgba(255, 255, 0, 0.4), inset 0 0 0 -3px #FF0 !important;
 }
