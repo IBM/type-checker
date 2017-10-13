@@ -325,14 +325,6 @@
       createReportList(alerts.warning, ALERT_TYPE.warning, root)
     );
 
-    // If the app is just being activated, then just display the window on the top right.
-    // If the app is active then, 
-    // Ensure that the UI is within the view of the window, but checking that the x-position is less
-    // than the width of the window minus the width ui and the y-position is less than the window 
-    // height minus the height of the ui.
-    // Leave the UI where it is if it is still in view. However, when it is out of horizontal view, 
-    // move the ui to be offset from the right by 2ems and offset from the bottom by 2em if it is 
-    // out of the 
     const ui = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__ui ${!appIsActive ? `${CLASS_PREFIX}__ui--animate`: ''}`,
     }, header, report);
