@@ -330,7 +330,7 @@
     );
 
     const ui = Elementary.createElement('div', {
-      className: `${CLASS_PREFIX}__ui`,
+      className: `${CLASS_PREFIX}__ui ${!appIsActive ? `${CLASS_PREFIX}__ui--animate`: ''}`,
     }, header, report);
     
     const container = Elementary.createElement('div', {
@@ -339,7 +339,7 @@
     
     // Event handlers
     const startDrag = ({ pageX, pageY }) => {
-      const { top, left, width, height } = ui.getBoundingClientRect()
+      const { top, left, width, height } = ui.getBoundingClientRect();
       const { innerWidth, innerHeight } = window;
       offsetX = pageX - left;
       offsetY = pageY - top;
@@ -506,15 +506,7 @@
   function removeTypeSizeAlerts (root) {
     // Remove the UI.
     const uis = Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
-      .forEach(ui => {
-        ui.addEventListener('transitionend', () => {
-          try {
-            ui.parentNode.removeChild(ui);
-          } catch(e) {}
-        });
-
-        ui.classList.add(`${CLASS_PREFIX}__ui--hidden`);
-      });
+      .forEach(ui => ui.parentNode.removeChild(ui));
 
     // Remove any generated IDs that have been added to the page.
     GENERATED_IDS.forEach(id => {

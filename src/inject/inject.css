@@ -48,6 +48,9 @@
   color: #272727;
   box-shadow: 0 0 0 2px #272727;
 
+}
+
+.ibm_type-checker__ui--animate {
   animation: show 100ms ease-out;
 }
 
@@ -60,12 +63,6 @@
     opacity: 1;
     transform: translate(0, 0);
   }
-}
-
-.ibm_type-checker__ui--hidden {
-  transform: translate(0, calc(-100% - 2em));
-  opacity: 0;
-  transition: opacity 100ms ease-out, transform 250ms ease-out;
 }
 
 .ibm_type-checker__ui::selection {
