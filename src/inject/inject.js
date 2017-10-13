@@ -205,6 +205,13 @@
     14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
     4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3`,
   }));
+
+  /**
+   * The variance value to account for calculation rounding differences for fluid type scale.
+   * 
+   * @type {number}
+   */
+  const FLUID_TEST_VARIANCE = 0.25;
     
   /**
    * State for whether the type size errors are displayed.
@@ -615,7 +622,15 @@
       // Filter down to the elements that contain text that is not compliant with IBM's type scales.
       .reduce((report, el) => {
         const style = window.getComputedStyle(el);
-        const fontSize = parseFloat(style.fontSize, 10);
+        const { fontFamily } = style;
+
+        // Check that the font is not sans-serif or monospaced.
+        const isSerif = !(!!(fontFamily.match(/sans/i)) || !!(fontFamily.match(/mono/i)));
+
+        // Account for the fact that Plex serif fonts have to be 1px smaller than the others due to
+        // optical inconsistencies.
+        // TODO: Remove Serif patch once Plex has been updated with fixed optical consistency. 
+        const fontSize = parseFloat(style.fontSize, 10) + (isSerif ? 1 : 0);
 
         // Make sure that the current element is visible to the user.
         const isVisible = (
@@ -631,8 +646,8 @@
         );
 
         // Check if there is a fluid type scale match for the current window size.
-        const fluidMatch = (
-          currentTypeScale.filter(size => Math.abs(size - fontSize) < 0.25).length > 0
+        fluidMatch = (
+          currentTypeScale.filter(size => Math.abs(size - fontSize) < FLUID_TEST_VARIANCE).length > 0
         );
 
         // Also check if there is a type scale match for the static type scale.
