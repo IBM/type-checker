@@ -212,8 +212,9 @@
    * @type {Boolean}
    */
   let appIsActive = false;
-
   let scrollAnimation;
+  let xPosition; 
+  let yPosition;
 
   /* ==============
   FUNCTIONS
@@ -231,9 +232,6 @@
     // Listen to window resizing to re-calculate the fluid type scales since they are dependent on 
     // the window size.
     window.addEventListener('resize', debounceRefresh);
-
-    window.addEventListener('keyup', evt => {
-    });
 
     console.log('IBM Type Checker is now active');
     appIsActive = true;
@@ -304,12 +302,10 @@
    * UI.
    */
   function createUI (root, alerts) {
-    let x = 0, 
-    y = 0,
-    offsetX = 0,
+    const windowWidth = Math.min(document.body.clientWidth, window.innerWidth);
+    const windowHeight = Math.min(document.body.clientHeight, window.innerHeight);
+    let offsetX = 0,
     offsetY = 0,
-    windowWidth = 0,
-    windowHeight = 0,
     uiWidth = 0,
     uiHeight = 0;
 
@@ -329,6 +325,14 @@
       createReportList(alerts.warning, ALERT_TYPE.warning, root)
     );
 
+    // If the app is just being activated, then just display the window on the top right.
+    // If the app is active then, 
+    // Ensure that the UI is within the view of the window, but checking that the x-position is less
+    // than the width of the window minus the width ui and the y-position is less than the window 
+    // height minus the height of the ui.
+    // Leave the UI where it is if it is still in view. However, when it is out of horizontal view, 
+    // move the ui to be offset from the right by 2ems and offset from the bottom by 2em if it is 
+    // out of the 
     const ui = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__ui ${!appIsActive ? `${CLASS_PREFIX}__ui--animate`: ''}`,
     }, header, report);
@@ -338,23 +342,22 @@
     }, ui);
     
     // Event handlers
-    const startDrag = ({ pageX, pageY }) => {
-      const { top, left, width, height } = ui.getBoundingClientRect();
-      const { innerWidth, innerHeight } = window;
-      offsetX = pageX - left;
-      offsetY = pageY - top;
-      uiWidth = width;
-      uiHeight = height;
-      windowWidth = innerWidth;
-      windowHeight = innerHeight;
+    const startDrag = ({ clientX, clientY }) => {
+      const { left, top } = ui.getBoundingClientRect();
+      offsetX = uiWidth - (clientX - left);
+      offsetY = uiHeight - (clientY - top);
       
       container.addEventListener('mousemove', drag);
       container.addEventListener('mouseup', endDrag);
     };
     
-    const drag = ({ pageX, pageY }) => {
-      ui.style.left = `${Math.max(0, Math.min((pageX - offsetX), (windowWidth - uiWidth)))}px`;
-      ui.style.top = `${Math.max(0, Math.min((pageY - offsetY), (windowHeight - uiHeight)))}px`;
+    const drag = ({ clientX, clientY }) => {
+      const xRight = windowWidth - clientX;
+      const yBottom = windowHeight - clientY;
+      xPosition = Math.max(0, Math.min((xRight - offsetX), (windowWidth - uiWidth)));
+      yPosition = Math.max(0, Math.min((yBottom - offsetY), (windowHeight - uiHeight)));
+      ui.style.right = `${xPosition}px`;
+      ui.style.bottom = `${yPosition}px`;
     };
     
     const endDrag = evt => { 
@@ -367,6 +370,22 @@
 
     // Append all of the extension UI to the root.
     root.appendChild(container);
+
+    uiWidth = ui.clientWidth;
+    uiHeight = ui.clientHeight;
+
+    // Ensure that the resized window does not push the UI out of view.
+    if (appIsActive) {
+      xPosition = ((xPosition + uiWidth) > windowWidth) ? (windowWidth - uiWidth) : xPosition;
+      yPosition = ((yPosition + uiHeight) > windowHeight) ? (windowHeight - uiHeight) : yPosition;
+    } else {
+      const padding = BASE_FONT_SIZE * 2;
+      xPosition = padding;
+      yPosition = windowHeight - uiHeight - padding;
+    }
+
+    ui.style.right = `${xPosition}px`;
+    ui.style.bottom = `${yPosition}px`;
   }
 
   /**
@@ -480,6 +499,7 @@
     let distanceToScroll = targetPosition - currentScrollPosition;
     let easing;
 
+    // Animation function.
     function step () {
       easing = 0.1 * distanceToScroll;
       currentScrollPosition += easing;
@@ -504,9 +524,20 @@
    * @param {HTMLElement} root The HTML element to remove type size related alerts within.
    */
   function removeTypeSizeAlerts (root) {
-    // Remove the UI.
-    const uis = Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
-      .forEach(ui => ui.parentNode.removeChild(ui));
+    // Remove alert stylings.
+    Array.from(root.querySelectorAll(`.${ERROR_CLASS_NAME}`))
+    .forEach(el => {
+      el.classList.remove(ERROR_CLASS_NAME);
+      el.title = '';
+    });
+    
+    Array.from(root.querySelectorAll(`.${WARNING_CLASS_NAME}`))
+    .forEach(el => {
+      el.classList.remove(WARNING_CLASS_NAME);
+      el.title = '';
+    });
+    
+    root.classList.remove(`${CLASS_PREFIX}--focus`);
 
     // Remove any generated IDs that have been added to the page.
     GENERATED_IDS.forEach(id => {
@@ -515,19 +546,9 @@
     });
     GENERATED_IDS = [];
 
-    Array.from(root.querySelectorAll(`.${ERROR_CLASS_NAME}`))
-      .forEach(el => {
-        el.classList.remove(ERROR_CLASS_NAME);
-        el.title = '';
-      });
-
-    Array.from(root.querySelectorAll(`.${WARNING_CLASS_NAME}`))
-      .forEach(el => {
-        el.classList.remove(WARNING_CLASS_NAME);
-        el.title = '';
-      });
-
-    root.classList.remove(`${CLASS_PREFIX}--focus`);
+    // Remove the UI.
+    Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
+      .forEach(ui =>  ui.parentNode.removeChild(ui));
   }
 
   /**
