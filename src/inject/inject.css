@@ -176,6 +176,7 @@
   box-shadow: none;
 }
 
+.ibm_type-checker__error:hover,
 .ibm_type-checker__error--active {
   position: relative;
   z-index: 2139999999;
@@ -190,6 +191,7 @@
   box-shadow: none;
 }
 
+.ibm_type-checker__warning:hover,
 .ibm_type-checker__warning--active {
   position: relative;
   z-index: 2139999999;
