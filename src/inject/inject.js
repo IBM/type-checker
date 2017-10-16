@@ -502,11 +502,11 @@
   function getElementMeta (element) {
     let meta = '';
     
-    if (element.className && element.className.length > 0) {
+    if (element.className && (element.className.length > 0)) {
       meta += `.${element.className.split(' ').join('.')}`;
     }
     
-    if (element.id && element.id.length > 0) {
+    if (element.id && (element.id.length > 0) && (GENERATED_IDS.indexOf(element.id) === -1)) {
       meta +=`#${element.id}`;
     }
 
