@@ -18,6 +18,7 @@
   font-size: 16px;
 
   background-color: transparent;
+  pointer-events: none;
 }
 
 .ibm_type-checker svg {
@@ -44,7 +45,7 @@
   background-color: #ffffff;
   color: #272727;
   box-shadow: 0 0 0 2px #272727;
-
+  pointer-events: auto;
 }
 
 .ibm_type-checker__ui--animate {
