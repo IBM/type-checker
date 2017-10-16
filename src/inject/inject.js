@@ -222,6 +222,12 @@
   let scrollAnimation;
   let xPosition; 
   let yPosition;
+  let offsetX = 0;
+  let offsetY = 0;
+  let uiWidth = 0;
+  let uiHeight = 0;
+  let windowWidth = 0;
+  let windowHeight = 0;
 
   /* ==============
   FUNCTIONS
@@ -295,26 +301,39 @@
    * @param {HTMLElement} root The HTML element to find type size related alerts within.
    */
   function showTypeSizeAlerts (root) {
-    const alerts = findSizingAlerts(root);
-    createUI(root, alerts);
-    alerts.error.forEach(styleAsError);
-    alerts.warning.forEach(styleAsWarning);
+    const { report, ui } = createUI(root);
+
+    const { error, warning } = findSizingAlerts(root);
+
+    report.textContent = 'Scanning page...';;
+
+    Elementary.clear(report);
+    if (error.length || warning.length) {
+      Elementary.appendChildren(
+        report,
+        createReportList(error, ALERT_TYPE.error, root), 
+        createReportList(warning, ALERT_TYPE.warning, root)
+      );
+    } else {
+      report.textContent = 'Congratulations! No problems found.';
+    }
+
+    positionUI(ui);
+
+    error.forEach(styleAsError);
+    warning.forEach(styleAsWarning);
   }
 
   /**
    * Create the UI elements and appends it to the given root.
    * 
    * @param {Element} root The HTML element to create the UI in.
-   * @param {{ warning: Element[], error: Element[] }} alerts Object of alerts to highlight in
-   * UI.
+   * @returns {{ container: Element, ui: Element }} Object containing the UI elements created needed
+   * for future operations.
    */
-  function createUI (root, alerts) {
-    const windowWidth = Math.min(document.body.clientWidth, window.innerWidth);
-    const windowHeight = Math.min(document.body.clientHeight, window.innerHeight);
-    let offsetX = 0,
-    offsetY = 0,
-    uiWidth = 0,
-    uiHeight = 0;
+  function createUI (root) {
+    windowWidth = Math.min(document.body.clientWidth, window.innerWidth);
+    windowHeight = Math.min(document.body.clientHeight, window.innerHeight);
 
     const closeButton = Elementary.createElement('button', {
       className:  `${CLASS_PREFIX}__close`,
@@ -327,10 +346,7 @@
 
     const report = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__report`,
-    }, 
-      createReportList(alerts.error, ALERT_TYPE.error, root), 
-      createReportList(alerts.warning, ALERT_TYPE.warning, root)
-    );
+    });
 
     const ui = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__ui ${!appIsActive ? `${CLASS_PREFIX}__ui--animate`: ''}`,
@@ -346,8 +362,8 @@
       offsetX = uiWidth - (clientX - left);
       offsetY = uiHeight - (clientY - top);
       
-      container.addEventListener('mousemove', drag);
-      container.addEventListener('mouseup', endDrag);
+      root.addEventListener('mousemove', drag);
+      root.addEventListener('mouseup', endDrag);
     };
     
     const drag = ({ clientX, clientY }) => {
@@ -360,8 +376,8 @@
     };
     
     const endDrag = evt => { 
-      container.removeEventListener('mousemove', drag);
-      container.removeEventListener('mouseup', endDrag);
+      root.removeEventListener('mousemove', drag);
+      root.removeEventListener('mouseup', endDrag);
     };
     
     // Add initial event listener.
@@ -369,9 +385,25 @@
 
     // Append all of the extension UI to the root.
     root.appendChild(container);
+    positionUI(ui);
 
+
+    return {
+      container,
+      ui,
+      report,
+    };
+  }
+
+  /**
+   * Positions the UI to ensure that any changes to the content in the UI does not push it out of
+   * view.
+   * 
+   * @param {Element} ui The UI element to position on the page.
+   */
+  function positionUI (ui) {
     uiWidth = ui.clientWidth;
-    uiHeight = ui.clientHeight;
+    uiHeight = ui.clientHeight; 
 
     // Ensure that the resized window does not push the UI out of view.
     if (appIsActive) {
@@ -426,8 +458,6 @@
           element.classList.remove(`${CLASS_PREFIX}__${alertType}--active`);
         },
         onclick: evt => {
-          evt.preventDefault();
-
           const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
           const { top } = element.getBoundingClientRect();
           const { innerHeight } = window;
@@ -605,6 +635,7 @@
     const currentTypeScale = FLUID_SCALE.map(getFontSizes(breakpoint));
 
     return Array.from(root.querySelectorAll('*'))
+      .filter(el => !(el.closest(`.${CLASS_PREFIX}`)))
 
       // Flatten lists of child nodes into a flat array. All children in this array should be 
       // distinct HTML elements. This makes it easier to make calculations with all of the children.
@@ -624,7 +655,7 @@
         const style = window.getComputedStyle(el);
         const { fontFamily } = style;
 
-        // Check that the font is not sans-serif or monospaced.
+        // Check that the font is not sans-serif or mono-spaced.
         const isSerif = !(!!(fontFamily.match(/sans/i)) || !!(fontFamily.match(/mono/i)));
 
         // Account for the fact that Plex serif fonts have to be 1px smaller than the others due to

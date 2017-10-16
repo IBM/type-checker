@@ -98,4 +98,15 @@ class Elementary {
 
     elem.addEventListener(eventType, handler);
   }
+
+  /**
+   * Clears an element for all of its children.
+   * 
+   * @param {Element} parent The element to clear from its children.
+   */
+  static clear (parent) {
+    while(parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+    }
+  }
 }
