@@ -4,7 +4,7 @@
    * 
    * @type {String}
    */
-  const CLASS_PREFIX = 'ibm-type-checker';
+  const CLASS_PREFIX = 'ibm_type-checker';
 
   /**
    * The base font size of the document.
@@ -38,7 +38,7 @@
    * @type {String}
    * @const
    */
-  const ERROR_CLASS_NAME = `${CLASS_PREFIX}-error`;
+  const ERROR_CLASS_NAME = `${CLASS_PREFIX}__error`;
   
   /**
    * The class name used to apply warning styles.
@@ -46,7 +46,7 @@
    * @type {String}
    * @const
    */
-  const WARNING_CLASS_NAME = `${CLASS_PREFIX}-warning`;
+  const WARNING_CLASS_NAME = `${CLASS_PREFIX}__warning`;
   
   /**
    * Set of established breakpoints for minimum window widths in pixels.
@@ -192,13 +192,42 @@
       MAX: BASE_EMS_SCALE[24],
     },
   ];
+
+  /**
+   * Close icon SVG.
+   * 
+   * @type {Element}
+   */
+  const CLOSE_ICON = Elementary.createSVGElement('svg', {
+    viewBox: '0 0 28 28',
+  }, Elementary.createSVGElement('path', {
+    d: `M14 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S2 20.6 2 14 7.4 2 14 2zm0-2C6.3 0 0 6.3 0 
+    14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
+    4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3`,
+  }));
+
+  /**
+   * The variance value to account for calculation rounding differences for fluid type scale.
+   * 
+   * @type {number}
+   */
+  const FLUID_TEST_VARIANCE = 0.25;
     
   /**
    * State for whether the type size errors are displayed.
    * 
    * @type {Boolean}
    */
-  let APP_IS_ACTIVE = false;
+  let appIsActive = false;
+  let scrollAnimation;
+  let xPosition; 
+  let yPosition;
+  let offsetX = 0;
+  let offsetY = 0;
+  let uiWidth = 0;
+  let uiHeight = 0;
+  let windowWidth = 0;
+  let windowHeight = 0;
 
   /* ==============
   FUNCTIONS
@@ -217,11 +246,8 @@
     // the window size.
     window.addEventListener('resize', debounceRefresh);
 
-    window.addEventListener('keyup', evt => {
-    });
-
     console.log('IBM Type Checker is now active');
-    APP_IS_ACTIVE = true;
+    appIsActive = true;
   }
 
   /**
@@ -234,7 +260,7 @@
     window.removeEventListener('resize', debounceRefresh);
 
     console.log('IBM Type Checker is now inactive');
-    APP_IS_ACTIVE = false;
+    appIsActive = false;
   }
 
   /**
@@ -275,37 +301,44 @@
    * @param {HTMLElement} root The HTML element to find type size related alerts within.
    */
   function showTypeSizeAlerts (root) {
-    const alerts = findSizingAlerts(root);
-    createUI(root, alerts);
+    const { report, ui } = createUI(root);
+
+    const { error, warning } = findSizingAlerts(root);
+
+    report.textContent = 'Scanning page...';;
+
+    Elementary.clear(report);
+    if (error.length || warning.length) {
+      Elementary.appendChildren(
+        report,
+        createReportList(error, ALERT_TYPE.error, root), 
+        createReportList(warning, ALERT_TYPE.warning, root)
+      );
+    } else {
+      report.textContent = 'Congratulations! No problems found.';
+    }
+
+    positionUI(ui);
+
+    error.forEach(styleAsError);
+    warning.forEach(styleAsWarning);
   }
 
   /**
    * Create the UI elements and appends it to the given root.
    * 
    * @param {Element} root The HTML element to create the UI in.
-   * @param {{ warning: Element[], error: Element[] }} alerts Object of alerts to highlight in
-   * UI.
+   * @returns {{ container: Element, ui: Element }} Object containing the UI elements created needed
+   * for future operations.
    */
-  function createUI (root, alerts) {
-    let x = 0, 
-    y = 0,
-    offsetX = 0,
-    offsetY = 0,
-    windowWidth = 0,
-    windowHeight = 0,
-    uiWidth = 0,
-    uiHeight = 0;
+  function createUI (root) {
+    windowWidth = Math.min(document.body.clientWidth, window.innerWidth);
+    windowHeight = Math.min(document.body.clientHeight, window.innerHeight);
 
     const closeButton = Elementary.createElement('button', {
       className:  `${CLASS_PREFIX}__close`,
-    }, 'Close IBM Type Checker');
-    closeButton.innerHTML += `
-    <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 2c6.6 0 12 5.4 12 12s-5.4 12-12 12S2 20.6 2 14 7.4 2 14 2zm0-2C6.3 0 0 6.3 0 
-        14s6.3 14 14 14 14-6.3 14-14S21.7 0 14 0z M19.7 9.7l-1.4-1.4-4.3 4.3-4.3-4.3-1.4 1.4 4.3 
-        4.3-4.3 4.3 1.4 1.4 4.3-4.3 4.3 4.3 1.4-1.4-4.3-4.3"/>
-    </svg>`
-    closeButton.addEventListener('click', deactivateApp);
+      onclick: deactivateApp,
+    }, 'Close IBM Type Checker', CLOSE_ICON);
 
     const header = Elementary.createElement('header', {
       className: `${CLASS_PREFIX}__drag-area`,
@@ -313,13 +346,10 @@
 
     const report = Elementary.createElement('div', {
       className: `${CLASS_PREFIX}__report`,
-    }, 
-      createReportList(alerts.error, ALERT_TYPE.error), 
-      createReportList(alerts.warning, ALERT_TYPE.warning)
-    );
+    });
 
     const ui = Elementary.createElement('div', {
-      className: `${CLASS_PREFIX}__ui`,
+      className: `${CLASS_PREFIX}__ui ${!appIsActive ? `${CLASS_PREFIX}__ui--animate`: ''}`,
     }, header, report);
     
     const container = Elementary.createElement('div', {
@@ -327,28 +357,27 @@
     }, ui);
     
     // Event handlers
-    const startDrag = ({ pageX, pageY }) => {
-      const { top, left, width, height } = ui.getBoundingClientRect()
-      const { innerWidth, innerHeight } = window;
-      offsetX = pageX - left;
-      offsetY = pageY - top;
-      uiWidth = width;
-      uiHeight = height;
-      windowWidth = innerWidth;
-      windowHeight = innerHeight;
+    const startDrag = ({ clientX, clientY }) => {
+      const { left, top } = ui.getBoundingClientRect();
+      offsetX = uiWidth - (clientX - left);
+      offsetY = uiHeight - (clientY - top);
       
-      container.addEventListener('mousemove', drag);
-      container.addEventListener('mouseup', endDrag);
+      root.addEventListener('mousemove', drag);
+      root.addEventListener('mouseup', endDrag);
     };
     
-    const drag = ({ pageX, pageY }) => {
-      ui.style.left = `${Math.max(0, Math.min((pageX - offsetX), (windowWidth - uiWidth)))}px`;
-      ui.style.top = `${Math.max(0, Math.min((pageY - offsetY), (windowHeight - uiHeight)))}px`;
+    const drag = ({ clientX, clientY }) => {
+      const xRight = windowWidth - clientX;
+      const yBottom = windowHeight - clientY;
+      xPosition = Math.max(0, Math.min((xRight - offsetX), (windowWidth - uiWidth)));
+      yPosition = Math.max(0, Math.min((yBottom - offsetY), (windowHeight - uiHeight)));
+      ui.style.right = `${xPosition}px`;
+      ui.style.bottom = `${yPosition}px`;
     };
     
     const endDrag = evt => { 
-      container.removeEventListener('mousemove', drag);
-      container.removeEventListener('mouseup', endDrag);
+      root.removeEventListener('mousemove', drag);
+      root.removeEventListener('mouseup', endDrag);
     };
     
     // Add initial event listener.
@@ -356,6 +385,38 @@
 
     // Append all of the extension UI to the root.
     root.appendChild(container);
+    positionUI(ui);
+
+
+    return {
+      container,
+      ui,
+      report,
+    };
+  }
+
+  /**
+   * Positions the UI to ensure that any changes to the content in the UI does not push it out of
+   * view.
+   * 
+   * @param {Element} ui The UI element to position on the page.
+   */
+  function positionUI (ui) {
+    uiWidth = ui.clientWidth;
+    uiHeight = ui.clientHeight; 
+
+    // Ensure that the resized window does not push the UI out of view.
+    if (appIsActive) {
+      xPosition = ((xPosition + uiWidth) > windowWidth) ? (windowWidth - uiWidth) : xPosition;
+      yPosition = ((yPosition + uiHeight) > windowHeight) ? (windowHeight - uiHeight) : yPosition;
+    } else {
+      const padding = BASE_FONT_SIZE * 2;
+      xPosition = padding;
+      yPosition = windowHeight - uiHeight - padding;
+    }
+
+    ui.style.right = `${xPosition}px`;
+    ui.style.bottom = `${yPosition}px`;
   }
 
   /**
@@ -363,9 +424,10 @@
    * 
    * @param {Elements[]} elements The elements to make a violation alert from. 
    * @param {ALERT_TYPE} alertType The type of alerts this report is going to have.
+   * @param {Element} root The HTML element to create the report in.
    * @returns {Element} The container element that has all of the element alerts listed out.
    */
-  function createReportList(elements, alertType) {
+  function createReportList(elements, alertType, root) {
     const title = Elementary.createElement('h2', {
       className: `${CLASS_PREFIX}__section-title`,
     }, `${alertType}s: ${elements.length}`);
@@ -387,6 +449,23 @@
         className: `${CLASS_PREFIX}__item`,
       }, Elementary.createElement('a', {
         className: `${CLASS_PREFIX}__link ${CLASS_PREFIX}__link--${alertType}`,
+        onmouseover: () => {
+          root.classList.add(`${CLASS_PREFIX}--focus`);
+          element.classList.add(`${CLASS_PREFIX}__${alertType}--active`);
+        },
+        onmouseleave: () => {
+          root.classList.remove(`${CLASS_PREFIX}--focus`);
+          element.classList.remove(`${CLASS_PREFIX}__${alertType}--active`);
+        },
+        onclick: evt => {
+          const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+          const { top } = element.getBoundingClientRect();
+          const { innerHeight } = window;
+          const middle = Math.round(innerHeight / 2);
+          const targetPosition = Math.round((top + scrollTop) - middle);
+
+          scrollTo(targetPosition);
+        },
         href: `#${id}`,
       }, elementText, elementMeta));
     }
@@ -423,15 +502,49 @@
   function getElementMeta (element) {
     let meta = '';
     
-    if (element.className && element.className.length > 0) {
+    if (element.className && (element.className.length > 0)) {
       meta += `.${element.className.split(' ').join('.')}`;
     }
     
-    if (element.id && element.id.length > 0) {
+    if (element.id && (element.id.length > 0) && (GENERATED_IDS.indexOf(element.id) === -1)) {
       meta +=`#${element.id}`;
     }
 
     return meta;
+  }
+
+  /**
+   * Scrolls the page to the given target position.
+   * 
+   * @param {number} targetPosition The position to scroll to.
+   */
+  function scrollTo (targetPosition) {
+    if (scrollAnimation) {
+      window.cancelAnimationFrame(scrollAnimation);
+    }
+
+    const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+    let currentScrollPosition = scrollTop;
+    let distanceToScroll = targetPosition - currentScrollPosition;
+    let easing;
+
+    // Animation function.
+    function step () {
+      easing = 0.1 * distanceToScroll;
+      currentScrollPosition += easing;
+      distanceToScroll = targetPosition - currentScrollPosition;
+
+      document.body.scrollTop = currentScrollPosition;
+      document.documentElement.scrollTop = currentScrollPosition;
+        
+      if (Math.abs(currentScrollPosition - targetPosition) > 3) {
+        scrollAnimation = window.requestAnimationFrame(step);
+      }
+    }
+
+    if (distanceToScroll !== 0) {
+      scrollAnimation = window.requestAnimationFrame(step);
+    }
   }
 
   /**
@@ -440,17 +553,20 @@
    * @param {HTMLElement} root The HTML element to remove type size related alerts within.
    */
   function removeTypeSizeAlerts (root) {
-    // Remove the UI.
-    const uis = Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
-      .forEach(ui => {
-        ui.addEventListener('transitionend', () => {
-          try {
-            ui.parentNode.removeChild(ui);
-          } catch(e) {}
-        });
-
-        ui.classList.add(`${CLASS_PREFIX}__ui--hidden`);
-      });
+    // Remove alert stylings.
+    Array.from(root.querySelectorAll(`.${ERROR_CLASS_NAME}`))
+    .forEach(el => {
+      el.classList.remove(ERROR_CLASS_NAME);
+      el.title = '';
+    });
+    
+    Array.from(root.querySelectorAll(`.${WARNING_CLASS_NAME}`))
+    .forEach(el => {
+      el.classList.remove(WARNING_CLASS_NAME);
+      el.title = '';
+    });
+    
+    root.classList.remove(`${CLASS_PREFIX}--focus`);
 
     // Remove any generated IDs that have been added to the page.
     GENERATED_IDS.forEach(id => {
@@ -459,17 +575,9 @@
     });
     GENERATED_IDS = [];
 
-    Array.from(root.querySelectorAll(`.${ERROR_CLASS_NAME}`))
-      .forEach(el => {
-        el.classList.remove(ERROR_CLASS_NAME);
-        el.title = '';
-      });
-
-    Array.from(root.querySelectorAll(`.${WARNING_CLASS_NAME}`))
-      .forEach(el => {
-        el.classList.remove(WARNING_CLASS_NAME);
-        el.title = '';
-      });
+    // Remove the UI.
+    Array.from(root.querySelectorAll(`.${CLASS_PREFIX}`))
+      .forEach(ui =>  ui.parentNode.removeChild(ui));
   }
 
   /**
@@ -527,6 +635,7 @@
     const currentTypeScale = FLUID_SCALE.map(getFontSizes(breakpoint));
 
     return Array.from(root.querySelectorAll('*'))
+      .filter(el => !(el.closest(`.${CLASS_PREFIX}`)))
 
       // Flatten lists of child nodes into a flat array. All children in this array should be 
       // distinct HTML elements. This makes it easier to make calculations with all of the children.
@@ -544,20 +653,32 @@
       // Filter down to the elements that contain text that is not compliant with IBM's type scales.
       .reduce((report, el) => {
         const style = window.getComputedStyle(el);
-        const fontSize = parseFloat(style.fontSize, 10);
+        const { fontFamily } = style;
+
+        // Check that the font is not sans-serif or mono-spaced.
+        const isSerif = !(!!(fontFamily.match(/sans/i)) || !!(fontFamily.match(/mono/i)));
+
+        // Account for the fact that Plex serif fonts have to be 1px smaller than the others due to
+        // optical inconsistencies.
+        // TODO: Remove Serif patch once Plex has been updated with fixed optical consistency. 
+        const fontSize = parseFloat(style.fontSize, 10) + (isSerif ? 1 : 0);
 
         // Make sure that the current element is visible to the user.
         const isVisible = (
           (style.display !== 'none') 
           && (style.visibility !== 'hidden') 
           && (style.opacity > 0) 
-          && (parseInt(style.width, 10) > 0)
-          && (parseInt(style.height, 10) > 0)
+          && (
+            (parseInt(style.width, 10) > BASE_FONT_SIZE)
+            && (parseInt(style.height, 10) > BASE_FONT_SIZE)
+            && (style.overflow !== 'hidden')
+          )
+          && (typeof style.clip === 'string')
         );
 
         // Check if there is a fluid type scale match for the current window size.
-        const fluidMatch = (
-          currentTypeScale.filter(size => Math.abs(size - fontSize) < 0.25).length > 0
+        fluidMatch = (
+          currentTypeScale.filter(size => Math.abs(size - fontSize) < FLUID_TEST_VARIANCE).length > 0
         );
 
         // Also check if there is a type scale match for the static type scale.
@@ -611,18 +732,18 @@
    * Initialize app.
    */
   function init () {
-    window.addEventListener('keyup', evt => {
+    window.addEventListener('keydown', evt => {
       const { ctrlKey, keyCode } = evt;
 
       // Check if the user pressed ctrl and T.
       if (ctrlKey && (keyCode === 84)) {
         // Style this element in a way to warn the user that this text node is not compliant if the
         // application has just been activated. Otherwise remove existing clear error styles.
-        (APP_IS_ACTIVE === false) ? activateApp() : deactivateApp();
+        (appIsActive === false) ? activateApp() : deactivateApp();
       }
 
       // Check if user pressed ESC.
-      if ((APP_IS_ACTIVE === true) && (evt.keyCode ===  27)) {
+      if ((appIsActive === true) && (evt.keyCode ===  27)) {
         deactivateApp();
       }
     });
