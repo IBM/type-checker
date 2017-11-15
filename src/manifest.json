@@ -16,27 +16,19 @@
   },
   "browser_action": {
     "default_icon": "icons/icon19.png",
-    "default_title": "IBM Type Checker",
-    "default_popup": "browser_action/browser_action.html"
+    "default_title": "Run IBM Type Checker"
   },
-  "content_scripts": [{
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "css": [
-        "inject/inject.css"
-      ]
-    },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
     {
       "matches": [
         "http://*/*",
         "https://*/*"
       ],
       "js": [
-        "inject/debounce.js",
-        "inject/Elementary.js",
-        "inject/inject.js"
+        "content.js"
       ]
     }
   ],

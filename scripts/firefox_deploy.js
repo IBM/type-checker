@@ -9,7 +9,7 @@ const { FIREFOX_ISSUER, FIREFOX_SECRET } = process.env;
 const src = fs.createReadStream(
   path.resolve(
     process.cwd(), 
-    'dist', 
+    'deploy', 
     `${extensionName}-${version}.zip`
   ));
 
