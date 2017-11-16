@@ -1,8 +1,11 @@
 import Message, { TYPE } from './Message';
+import Popup from './Popup';
 
-console.log(TYPE);
-
-chrome.browserAction.onClicked.addListener(data => {
-  console.log(data);
-  new Message(TYPE.request_report).send();
+chrome.browserAction.onClicked.addListener(tab => {
+  new Popup().create()
+  .then(
+    new Message(TYPE.request_report)
+      .sendToTab(tab)
+      .then(console.info('Type report requested'))
+  )
 });

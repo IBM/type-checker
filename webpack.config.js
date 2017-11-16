@@ -5,9 +5,9 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: {
-    action: path.resolve(__dirname, './src/action.js'),
-    content: path.resolve(__dirname, './src/content.js'),
-    background: path.resolve(__dirname, './src/background.js'),
+    app: ['babel-polyfill', path.resolve(__dirname, './src/app.js')],
+    background: ['babel-polyfill', path.resolve(__dirname, './src/background.js')],
+    content: ['babel-polyfill', path.resolve(__dirname, './src/content.js')],
   },
 
   output: {
@@ -36,6 +36,7 @@ module.exports = {
     new CopyPlugin([
       { from: path.resolve(__dirname, './src/manifest.json'), to: path.resolve(__dirname, './dist') },
       { from: path.resolve(__dirname, './src/icons'), to: path.resolve(__dirname, './dist/icons') },
+      { from: path.resolve(__dirname, './src/**/*.html'), to: path.resolve(__dirname, './dist'), context: 'src' },
     ]),
     new ExtractTextPlugin('app.css'),
   ],

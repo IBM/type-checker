@@ -12,9 +12,9 @@ class Message {
   /**
    * Constructor for Message class.
    * @param {Message.Type} type Type of message to create.
-   * @param {*} data Data to send in message.
+   * @param {*} [data=''] Data to send in message.
    */
-  constructor(type, data) {
+  constructor(type, data = '') {
     this.type = type;
     this.data = data;
     return this;
@@ -33,14 +33,27 @@ class Message {
 
   /**
    * Sends message.
-   * @return {Promise}
    */
   send() {
-    new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(this.toJSON(), (error, result) => {
-        if (error) reject(error);
-        resolve(result);
-      })
+    return new Promise((resolve, reject) => {
+      try {
+        chrome.runtime.sendMessage(null, this.toJSON(), data => resolve(data));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Sends message to active tab.
+   */
+  sendToTab(tab) {
+    return new Promise((resolve, reject) => {
+      try {
+        chrome.tabs.sendMessage(tab.id, this.toJSON(), data => resolve(data));
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 }
